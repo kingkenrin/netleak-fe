@@ -9,7 +9,7 @@ const Step1 = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassWord, setConfirmPassWord] = useState('')
-    const [name, setName] = useState('')
+    const [name, setName] = useState('') 
     const [phone, setPhone] = useState('')
     const [sex, setSex] = useState('')
 

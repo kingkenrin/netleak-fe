@@ -1,5 +1,6 @@
 import "./User.css";
 import React, { useState, useEffect, useRef, useContext } from "react";
+import { useNavigate } from 'react-router-dom';
 import {
   CloseOutlined,
   UserOutlined,
@@ -18,9 +19,13 @@ import DropDown from "./DropDown";
 import SideBar from "./SideBar";
 import axios from "axios";
 import { jwtDecode } from "jwt-decode";
+import HistorySlide from "./HistorySlide";
 
 const User = () => {
+  const token = localStorage.accessToken
+  const navigate = useNavigate()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectMenu, setSelectMenu] = useState('info');
   const [userDropdown, setUserDropdown] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [sexSelected, setSexSelected] = useState("");
@@ -34,25 +39,58 @@ const User = () => {
   const menuRef = useRef();
   const avatarRef = useRef();
 
-  
-  
+  const [historyFilms, setHistoryFilms] = useState([])
+  const [name, setName] = useState("")
+  const [phone, setPhone] = useState("")
+  const [sex, setSex] = useState("")
+  const [email, setEmail] = useState("")
+
+  const [oldPassword, setOldPassword] = useState("")
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmNewPassword, setConfirmNewPassword] = useState("")
+
 
   const fetchUser = async () => {
-  const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2MjM3MTJiZGJjODRjNzZmYjkwMWI4OSIsImVtYWlsIjoidHJhbm5odXRwaGF0dHZAZ21haWwuY29tIiwiaWF0IjoxNzE0NTU5MjIzLCJleHAiOjE3MTQ1NzcyMjN9.FtVTFHNdxiKBcoVRUuKURb4CYumqPpS2ScC0P61tjn0";
-  const decoded = jwtDecode(token).id;
-  console.log("decode:", decoded);
+    const decoded = jwtDecode(token).id;
+    console.log("decode:", decoded);
     setUserId(decoded);
     try {
       const response = await axios.get(`http://localhost:8081/v1/api/admin/users/${decoded}`);
       setUser(response.data);
+      setName(response.data.name)
+      setPhone(response.data.phone)
+      setSex(response.data.sexuality)
+      setSexSelected(response.data.sexuality == "male" ? "Nam" : "Nữ")
+      setEmail(response.data.email)
     } catch (err) {
       console.log(err);
     }
-}
+  }
 
-useEffect(() => {
-  fetchUser()
-}, [])
+  const fetchHistoryFilm = async () => {
+    fetch(`http://localhost:8081/v1/api/user/historyFilm/${user?._id}`, {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        setHistoryFilms(data.filmId)
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+  }
+
+  useEffect(() => {
+    fetchUser()
+  }, [])
+
+  useEffect(() => {
+    fetchHistoryFilm()
+  }, [user])
 
   function toggleUserDropdown() {
     setUserDropdown(!userDropdown);
@@ -67,7 +105,10 @@ useEffect(() => {
     if (!showModal1) {
       // Đặt lại giá trị của isDropDownOpened thành false
       setIsDropdownOpen(false);
-      setSexSelected("");
+      setSexSelected(user.sexuality == "male" ? "Nam" : "Nữ");
+      setName(user.name)
+      setPhone(user.phone)
+      setEmail(user.email)
     }
   }, [showModal1]);
 
@@ -77,111 +118,198 @@ useEffect(() => {
     }
   });
 
+  const handleChangeInfo = () => {
+    fetch(`http://localhost:8081/v1/api/user/update/account/${user?._id}`, {
+      method: 'PATCH',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        name: name,
+        sexuality: sexSelected == 'Nam' ? 'male' : 'female',
+        phone: phone,
+        email: email
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data)
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+      .finally(() => {
+        fetchUser()
+      })
+  }
 
+  const handleChangePassword = () => {
+    if (newPassword != confirmNewPassword) {
+      alert("mật khẩu mới và xác nhận mật khẩu mới không khớp")
+      return
+    }
+
+    if (newPassword == '' || oldPassword == '' || confirmNewPassword == '') {
+      alert("Vui lòng nhập đầy đủ thông tin")
+      return
+    }
+
+    fetch(`http://localhost:8081/v1/api/user/updatePassword`, {
+      method: 'PATCH',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        id: user._id,
+        oldPassword: oldPassword,
+        newPassword: newPassword
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.success != false) {
+          localStorage.clear()
+          navigate('/login')
+        }
+        else {
+          alert(data.message)
+        }
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+  }
+
+  const handleDeleteHistotyFilm = (filmId) => {
+    fetch(`http://localhost:8081/v1/api/user/historyFilm`, {
+      method: 'DELETE',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        userId: user._id,
+        filmId: filmId,
+      })
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("susscess")
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+      .finally(() => {
+        fetchHistoryFilm()
+      })
+  }
 
   return (
     <div className="user-container">
       <div className="header">
         <h1>Netflix</h1>
-        <div className="relative">
-          <div
-            ref={avatarRef}
-            className="flex flex-row items-center cursor-pointer"
-            onClick={() => setUserDropdown(!userDropdown)}
-          >
-            <img
-              src="src\assets\images\netflix_avatar.png"
-              className="rounded-full w-10 h-10 border-2"
-            />
-            <CaretDownOutlined className="ml-2" />
-          </div>
-          <DropDown ref={menuRef} isVisible={userDropdown} object={Menu} />
-        </div>
+        
       </div>
       <div className="flex-row flex">
-        <SideBar className="z-50"/>
+        <SideBar className="z-50" user={user} selectMenu={selectMenu} setSelectMenu={setSelectMenu} />
         <div className="w-full">
           <div className="flex-col ">
             <h1 className="p-7 text-2xl font-semibold">Tài Khoản</h1>
-            <div className="flex-col ">
-              <div className="py-3 pl-7 font-semibold text-[20px] ">
-                Thông tin cá nhân
-              </div>
-              <div className="mt-3 flex rounded-md px-7 py-7 bg-white outline outline-1 outline-gray-300 justify-between items-center mr-20 ml-7">
-                <div className="flex-col">
-                  <span className="font-semibold text-[18px]">
-                  {user?.name}
-                  </span>
-                  {/* md:block */}
-                  <div className="flex flex-col mt-5  md:flex-row md:items-center">
-                    <div>
-                      <span>Giới tính: </span>
-                      <span className="font-semibold">{user?.sexuality}</span>
-                    </div>
-                    {/* <div className="text-gray-300 ml-10 mr-10">|</div> */}
-                    <div className="hidden md:block ml-10 pl-10 border-l border-gray-300 h-[20px]"></div>
-                    {/* <span>Ngày Sinh: </span>
+            {
+              selectMenu == 'info' &&
+              <div className="flex-col ">
+                <div className="py-3 pl-7 font-semibold text-[20px] ">
+                  Thông tin cá nhân
+                </div>
+                <div className="mt-3 flex rounded-md px-7 py-7 bg-white outline outline-1 outline-gray-300 justify-between items-center mr-20 ml-7">
+                  <div className="flex-col">
+                    <span className="font-semibold text-[18px]">
+                      {user?.name}
+                    </span>
+                    {/* md:block */}
+                    <div className="flex flex-col mt-5  md:flex-row md:items-center">
+                      <div>
+                        <span>Giới tính: </span>
+                        <span className="font-semibold">{user?.sexuality == 'male' ? 'Nam' : 'Nữ'}</span>
+                      </div>
+                      {/* <div className="text-gray-300 ml-10 mr-10">|</div> */}
+                      <div className="hidden md:block ml-10 pl-10 border-l border-gray-300 h-[20px]"></div>
+                      {/* <span>Ngày Sinh: </span>
                     <span className="font-semibold">03/01/2003</span>
                     <span className="border-l border-gray-200 pl-10 ml-10 "></span> */}
-                    <div className="mt-2 md:mt-0">
-                      <span>UID: </span>
-                      <span className="font-semibold">{user?._id}</span>
+                      <div className="mt-2 md:mt-0">
+                        <span>UID: </span>
+                        <span className="font-semibold">{user?._id}</span>
+                      </div>
                     </div>
                   </div>
+                  <span
+                    className="font-semibold cursor-pointer"
+                    onClick={() => setShowModal1(true)}
+                  >
+                    Chỉnh sửa
+                  </span>
                 </div>
-                <span
-                  className="font-semibold cursor-pointer"
-                  onClick={() => setShowModal1(true)}
-                >
-                  Chỉnh sửa
-                </span>
-              </div>
-              <div className="py-3 pl-7 font-semibold text-[20px] mt-3 ">
-                Tài khoản và bảo mật
-              </div>
-              <div className="mt-3 mb-10 flex flex-col rounded-md outline outline-1 outline-gray-300 px-7 py-7 bg-white mr-20 ml-7">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="mr-3">Email </span>
-                    <span className="font-semibold">
-                    {user?.email}
+                <div className="py-3 pl-7 font-semibold text-[20px] mt-3 ">
+                  Tài khoản và bảo mật
+                </div>
+                <div className="mt-3 mb-10 flex flex-col rounded-md outline outline-1 outline-gray-300 px-7 py-7 bg-white mr-20 ml-7">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="mr-3">Email </span>
+                      <span className="font-semibold">
+                        {user?.email}
+                      </span>
+                    </div>
+                    <span
+                      className="font-semibold cursor-pointer"
+                      onClick={() => setShowModal2(true)}
+                    >
+                      Chỉnh sửa
                     </span>
                   </div>
-                  <span
-                    className="font-semibold cursor-pointer"
-                    onClick={() => setShowModal2(true)}
-                  >
-                    Chỉnh sửa
-                  </span>
-                </div>
-                <hr className="border-gray-200 my-5"></hr>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="mr-3">Số điện thoại </span>
-                    <span className="font-semibold">{user?.phone}</span>
+                  <hr className="border-gray-200 my-5"></hr>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="mr-3">Số điện thoại </span>
+                      <span className="font-semibold">{user?.phone}</span>
+                    </div>
+                    <span
+                      className="font-semibold cursor-pointer"
+                      onClick={() => setShowModal3(true)}
+                    >
+                      Chỉnh sửa
+                    </span>
                   </div>
-                  <span
-                    className="font-semibold cursor-pointer"
-                    onClick={() => setShowModal3(true)}
-                  >
-                    Chỉnh sửa
-                  </span>
-                </div>
-                <hr className="border-gray-200 my-5"></hr>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="mr-3">Mật Khẩu </span>
-                    <span className="font-semibold">*********</span>
+                  <hr className="border-gray-200 my-5"></hr>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="mr-3">Mật Khẩu </span>
+                      <span className="font-semibold">*********</span>
+                    </div>
+                    <span
+                      className="font-semibold cursor-pointer"
+                      onClick={() => setShowModal4(true)}
+                    >
+                      Chỉnh sửa
+                    </span>
                   </div>
-                  <span
-                    className="font-semibold cursor-pointer"
-                    onClick={() => setShowModal4(true)}
-                  >
-                    Chỉnh sửa
-                  </span>
                 </div>
               </div>
-            </div>
+            }
+            {
+              selectMenu == 'history' &&
+              <div>
+                <div className="flex-col">
+                  <div className="py-3 pl-7 font-semibold text-[20px] ">
+                    Phim đã xem
+                  </div>
+                  <HistorySlide movies={historyFilms} handleDeleteHistotyFilm={handleDeleteHistotyFilm} title="Phim đã xem" />
+                </div>
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -204,6 +332,10 @@ useEffect(() => {
                 id="email"
                 placeholder="Nhập tên của bạn"
                 className="bg-gray-200 border-gray-300 text-gray-900 text-sm rounded-lg   focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value)
+                }}
               />
 
               <label
@@ -214,9 +346,8 @@ useEffect(() => {
               </label>
               <div className="dropdown min-w-2 relative">
                 <div
-                  className={`select p-2.5 border-[1px] ${
-                    isDropdownOpen ? "border-blue-500" : "border-gray-300"
-                  } hover:border-blue-500 rounded-lg flex justify-between items-center cursor-pointer`}
+                  className={`select p-2.5 border-[1px] ${isDropdownOpen ? "border-blue-500" : "border-gray-300"
+                    } hover:border-blue-500 rounded-lg flex justify-between items-center cursor-pointer`}
                   onClick={() => setIsDropdownOpen((prev) => !prev)}
                 >
                   {sexSelected ? sexSelected : "Giới tính"}
@@ -248,6 +379,10 @@ useEffect(() => {
               <button
                 type="submit"
                 className="w-full text-white bg-blue-700 hover:bg-blue-800 rounded-lg p-2.5 mt-7 focus:ring-blue-500 focus:border-blue-500"
+                onClick={() => {
+                  handleChangeInfo()
+                  setShowModal1(false)
+                }}
               >
                 Gửi
               </button>
@@ -281,10 +416,18 @@ useEffect(() => {
                 id="email"
                 placeholder="Nhập email của bạn"
                 className="bg-gray-200 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                }}
               />
               <button
                 type="submit"
                 className="w-full text-white bg-blue-700 hover:bg-blue-800 rounded-lg p-2.5 mt-7 focus:ring-blue-500 focus:border-blue-500"
+                onClick={() => {
+                  handleChangeInfo()
+                  setShowModal2(false)
+                }}
               >
                 Gửi
               </button>
@@ -318,10 +461,18 @@ useEffect(() => {
                 id="email"
                 placeholder="Nhập số điện thoại"
                 className="bg-gray-200 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value)
+                }}
               />
               <button
                 type="submit"
                 className="w-full text-white bg-blue-700 hover:bg-blue-800 rounded-lg p-2.5 mt-7 focus:ring-blue-500 focus:border-blue-500"
+                onClick={() => {
+                  handleChangeInfo()
+                  setShowModal3(false)
+                }}
               >
                 Gửi
               </button>
@@ -336,7 +487,12 @@ useEffect(() => {
           </form>
         </div>
       </Modal>
-      <Modal isVisible={showModal4} onClose={() => setShowModal4(false)}>
+      <Modal isVisible={showModal4} onClose={() => {
+        setShowModal4(false)
+        setOldPassword("")
+        setNewPassword("")
+        setConfirmNewPassword("")
+      }}>
         <div className="py-6 px-6 lg:px-8 text-left">
           <h3 className="mb-4 text-xl font-medium text-gray-900">
             Đổi mật khẩu
@@ -355,6 +511,8 @@ useEffect(() => {
                 id="email"
                 placeholder="Nhập mật khẩu cũ"
                 className="bg-gray-200 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                value={oldPassword}
+                onChange={(e) => { setOldPassword(e.target.value) }}
               />
               <label
                 for="password"
@@ -368,17 +526,48 @@ useEffect(() => {
                 id="email"
                 placeholder="Nhập mật khẩu mới"
                 className="bg-gray-200 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                value={newPassword}
+                onChange={(e) => { setNewPassword(e.target.value) }}
               />
+
+              <label
+                for="password"
+                className="block mb-2 mt-4 text-s font-medium text-gray-900"
+              >
+                Xác nhận mật khẩu mới
+              </label>
+              <input
+                type="password"
+                name="email"
+                id="email"
+                placeholder="Nhập xác nhận mật khẩu mới"
+                className="bg-gray-200 border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                value={confirmNewPassword}
+                onChange={(e) => { setConfirmNewPassword(e.target.value) }}
+              />
+
               <button
                 type="submit"
                 className="w-full text-white bg-blue-700 hover:bg-blue-800 rounded-lg p-2.5 mt-7 focus:ring-blue-500 focus:border-blue-500"
+                onClick={() => {
+                  handleChangePassword()
+                  setShowModal4(false)
+                  setOldPassword("")
+                  setNewPassword("")
+                  setConfirmNewPassword("")
+                }}
               >
                 Gửi
               </button>
               <button
                 type="button"
                 className="w-full text-blue-700 bg-white border-blue-700 border-[1px] hover:bg-blue-100  rounded-lg p-2.5 mt-4 focus:ring-blue-500 focus:border-blue-700"
-                onClick={() => setShowModal4(false)}
+                onClick={() => {
+                  setOldPassword("")
+                  setNewPassword("")
+                  setConfirmNewPassword("")
+                  setShowModal4(false)
+                }}
               >
                 Hủy
               </button>

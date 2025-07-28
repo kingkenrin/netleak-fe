@@ -11,7 +11,6 @@ import User from './pages/User/User'
 import Video from './pages/Video/Video'
 import Welcome from './pages/Welcome/Welcome'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import History from './pages/User/History'
 import Search from './components/Search/Search'
 import { AppProvider } from './context/AppContext'
 import Login from './pages/Login/Login'
@@ -36,7 +35,6 @@ function App() {
              
               <Route path="/welcome" element={<Welcome />} />
               <Route path="/user" element={<User />} />
-              <Route path="/history" element={<History />} />
               <Route path="/search" element={<Search />} />
             </Route>
           </Routes>

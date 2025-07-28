@@ -10,81 +10,99 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 const TabPage = () => {
-  const {  accessToken, movies } = useContext(AppContext);
-  const token= accessToken;
-  const navigate= useNavigate() 
+  const { movies } = useContext(AppContext);
+  const token = localStorage.getItem('accessToken');
+  const navigate = useNavigate()
   const [allFavoriteFilms, setAllFavoriteFilms] = useState([])
-  const [isLoadingAllFavoriteFilm,setIsLoadingAllFavoriteFilm] = useState(true)
+  const [isLoadingAllFavoriteFilm, setIsLoadingAllFavoriteFilm] = useState(true)
+  const [isLoadingAllRecommendFilm, setIsLoadingAllRecommendFilm] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
+
   const [recommendFilms, setRecommendFilms] = useState([])
-  const userId= jwtDecode(accessToken).id
-//   const [myList, setMyList] = useState(genres[0].movies); // list
+  const userId = jwtDecode(token)?.id
+  //   const [myList, setMyList] = useState(genres[0].movies); // list
 
 
 
   const getAllFavoriteFilms = () => {
     setIsLoadingAllFavoriteFilm(true)
     fetch(`http://localhost:8081/v1/api/user/favorite/${userId}`, {
-        method: 'GET',
-        headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${accessToken}`
-        },
-    })
-        .then((res) => res.json())
-        .then((data) => {
-            if (data.success != false)
-                setAllFavoriteFilms( data)
-          console.log("favour", data)
-        })
-        .catch((e) => {
-            console.log(e)
-        })
-        .finally(() => {
-        
-            setIsLoadingAllFavoriteFilm(false)
-        })
-}
-const getRecommendFilms = () => {
-  // setIsLoadingRecommendFilm(true)
-  fetch(`http://localhost:8081/v1/api/user/recommendFavorite/${userId}`, {
       method: 'GET',
       headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
       },
-  })
+    })
       .then((res) => res.json())
       .then((data) => {
-          if (data.success != false)
-              setRecommendFilms(movies.filter(movie => data.includes(movie._id)))
+        if (data.success != false)
+          setAllFavoriteFilms(data)
+        console.log("favour", data)
       })
       .catch((e) => {
-          console.log(e)
+        console.log(e)
       })
       .finally(() => {
-          // setIsLoadingRecommendFilm(false)
+
+        setIsLoadingAllFavoriteFilm(false)
       })
-}
- const handleToHome=()=>{
+  }
+  const getRecommendFilms = () => {
+    setIsLoadingAllRecommendFilm(true)
+    fetch(`http://localhost:8081/v1/api/user/recommendFavorite/${userId}`, {
+      method: 'GET',
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data)
+
+        if (data.success != false)
+          setRecommendFilms(movies.filter(movie => data.includes(movie._id)))
+      })
+      .catch((e) => {
+        console.log(e)
+      })
+      .finally(() => {
+        setIsLoadingAllRecommendFilm(false)
+      })
+  }
+  const handleToHome = () => {
     navigate(`/home`);
- }
+  }
   useEffect(() => {
     getAllFavoriteFilms()
     getRecommendFilms()
-    
   }, []);
+
+  useEffect(() => {
+    const handleIsLoanding = () => {
+      if (isLoadingAllRecommendFilm || isLoadingAllFavoriteFilm) {
+        setIsLoading(true)
+      } else {
+        setIsLoading(false)
+      }
+    }
+
+    handleIsLoanding()
+  }, [isLoadingAllRecommendFilm, isLoadingAllFavoriteFilm
+  ])
+
   return (
     <div className="mylist-container">
       <Navbar />
 
-      {isLoadingAllFavoriteFilm == true || allFavoriteFilms.length==0 ? (
+      {isLoading == true || allFavoriteFilms.length == 0 ? (
         <div className="flex mt-20 justify-center items-center">
-        <Lottie height={400} width={400} animationData={animationData} className="flex-grow"/>
-        <div className="flex-grow items-center justify p-5"> 
+          <Lottie height={400} width={400} animationData={animationData} className="flex-grow" />
+          <div className="flex-grow items-center justify p-5">
             <p className="text-3xl text-bold mb-5">Danh sách yêu thích của bạn đang trống</p>
             <p className="hover:text-green-500 cursor-pointer" onClick={handleToHome}> Hãy khám phá thêm các phim khác tại Trang chủ nào</p>
-        </div>
-        
+          </div>
+
         </div>
       ) : (
         <>

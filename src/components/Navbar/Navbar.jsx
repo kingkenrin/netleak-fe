@@ -18,10 +18,10 @@ const Navbar = () => {
   const [showNav, setShowNav] = useState(false)
   const [isSearch, setIsSearch] = useState(false)
 
-  const [query,setQuery] = useState("")
+  const [query, setQuery] = useState("")
   const handleChange = (event) => {
     setQuery(event.target.value)
-}
+  }
   function toogleNoti() {
     setNoti(!noti)
     setIsSearch(false)
@@ -47,7 +47,7 @@ const Navbar = () => {
 
   const handleKeyDown = (event) => {
     if (event.key === 'Enter') {
-      navigate("/search", {state:query})
+      navigate("/search", { state: query })
     }
   }
 
@@ -64,7 +64,14 @@ const Navbar = () => {
             onClick={() => setShowNav(!showNav)}
             className="fa-solid fa-bars text-2xl text-white cursor-pointer block md:hidden"
           ></i>
-          <h2 className="text-2xl font-black text-[#ff0000]">NETFLIX</h2>
+          <div
+            onClick={() => {
+              navigate('/home')
+            }}
+          >
+            <h2 className="text-2xl font-black text-[#ff0000] cursor-pointer"
+            >NETFLIX</h2>
+          </div>
           <div className="hidden md:block ml-5">
             <ul>
               <li>
@@ -102,29 +109,29 @@ const Navbar = () => {
               {isSearch && (
                 <div>
                   <form onSubmit={e => { e.preventDefault() }}>
-                  <input
-                    type="text"
-                    value={query}
-                    className=" text-black w-[250px] h-[35px] focus:ring-[#ff0000] focus:outline-[#ff0000] rounded-md pl-2 pr-10"
-                    onKeyDown={handleKeyDown}
-                    onChange={handleChange}
-                  />
+                    <input
+                      type="text"
+                      value={query}
+                      className=" text-black w-[250px] h-[35px] focus:ring-[#ff0000] focus:outline-[#ff0000] rounded-md pl-2 pr-10"
+                      onKeyDown={handleKeyDown}
+                      onChange={handleChange}
+                    />
                   </form>
                 </div>
               )}
             </div>
-            <FontAwesomeIcon
+            {/* <FontAwesomeIcon
               icon={faBell}
               className="text-white text-2xl cursor-pointer"
               onClick={toogleNoti}
-            />
+            /> */}
             <FontAwesomeIcon
               icon={faUser}
               className="text-white text-2xl cursor-pointer"
               onClick={toogleUserDropdown}
             />
           </div>
-          {noti && (
+          {/* {noti && (
             <div className="noti-container">
               <div className="noti-access">
                 <h3>THÔNG BÁO</h3>
@@ -144,7 +151,7 @@ const Navbar = () => {
               <Noti />
               <Noti />
             </div>
-          )}
+          )} */}
           {userDropdown && (
             <div className="userDropdown-container">
               <div className="userDropdown-access">
@@ -162,21 +169,21 @@ const Navbar = () => {
                   </Link>
                   <div className="group flex items-center">
                     <LogoutOutlined className="text-[#696969] group-hover:text-[green] mr-2  cursor-pointer " />
-                    <p 
+                    <p
                       onClick={() => {
-                        fetch('http://localhost:8081/v1/api/logout',{
+                        fetch('http://localhost:8081/v1/api/logout', {
                           method: 'POST',
                           headers: {
                             "Content-Type": "application/json",
                             // 'Content-Type': 'application/x-www-form-urlencoded',
                           }
                         })
-                        .then(() => {
-                          localStorage.clear()
-                          navigate('/login')
-                        })
+                          .then(() => {
+                            localStorage.clear()
+                            navigate('/login')
+                          })
                       }}
-                    className="text-[#696969] group-hover:text-[white] cursor-pointer">
+                      className="text-[#696969] group-hover:text-[white] cursor-pointer">
                       Đăng xuất
                     </p>
                   </div>

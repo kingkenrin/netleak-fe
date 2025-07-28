@@ -262,7 +262,7 @@ const userId = jwtDecode(token).id
                         <FontAwesomeIcon icon={faHeart} className=' text-red-500'  />
                         <p >Yêu thích</p>
                     </button>
-                </div>
+                </div>  
             </div>
 
             <div className='w-full flex justify-start items-end lg:items-center xl:items-end flex-col right-0 z-0'>

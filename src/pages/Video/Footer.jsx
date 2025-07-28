@@ -37,27 +37,27 @@ const Footer = () => {
                 <h3 className='text-[#800000] brightness-[1.6] mb-[20px] font-bold text-[20px]'>Về chúng tôi</h3>
                 <ul className='list-none *:text-white/[.7] *:cursor-pointer *:mb-1 *:transition-all *:font-semibold'>
                     <li className='hover:text-[red] hover:scale-[1.1] '>
-                        21520419 - Phạm Ngọc Qúi
+                        Hợp đồng điện tử
                     </li>
 
                     <li className='hover:text-[red] hover:scale-[1.1] '>
-                        21520390 - Trần Nhựt Phát
+                        Điều khoản và điều kiện
                     </li>
 
                     <li className='hover:text-[red] hover:scale-[1.1] '>
-                        21520905 - Nguyễn Thị Thu Hương
+                        Chính sách bảo vệ thông tin cá nhân
                     </li>
 
                     <li className='hover:text-[red] hover:scale-[1.1] '>
-                        21521129 - Ngô Võ Quang Minh
+                        Thông báo 
                     </li>
 
                     <li className='hover:text-[red] hover:scale-[1.1] '>
-                        21522162 - Nguyễn Võ Hoàng Huy
+                        Liên hệ
                     </li>
 
                     <li className='hover:text-[red] hover:scale-[1.1] '>
-                        21522346 - Trần Tuấn Minh
+                        Góp ý
                     </li>
 
                 </ul>

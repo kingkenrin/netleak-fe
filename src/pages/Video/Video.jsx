@@ -82,7 +82,7 @@ const Video = () => {
     useEffect(() => {
         setTimeout(() => {
             handleAddHistoty()
-        }, 30000)
+        }, 3000)
     }, [])
 
     const handleAddRating = (filmId, rate) => {

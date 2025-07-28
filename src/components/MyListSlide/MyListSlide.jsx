@@ -67,6 +67,7 @@ export default function GenreSlide({ allFavoriteFilms, movies, title, setAllFavo
             <div
               className={`listcard ${index === hoveredIndex ? "hovered" : ""} relative`}
               onClick={() => handleMouseEnter(index, movie)}
+              key={index}
             >
               <div className="image-container ">
                 {index === hoveredIndex ? (
